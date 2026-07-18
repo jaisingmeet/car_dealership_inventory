@@ -42,4 +42,29 @@ def test_get_cars_success():
     assert isinstance(response.json(), list)
     assert len(response.json()) == 1
     assert response.json()[0]["make"] == "Honda"
+
+def test_filter_cars_by_make_success():
+    # 1. Pehle do alag-alag companies ki cars add karte hain
+    client.post("/api/cars", json={
+        "make": "Toyota",
+        "model": "Camry",
+        "year": 2024,
+        "price": 32000.0,
+        "status": "available"
+    })
+    client.post("/api/cars", json={
+        "make": "Honda",
+        "model": "Civic",
+        "year": 2023,
+        "price": 26000.0,
+        "status": "available"
+    })
     
+    # 2. Ab sirf Toyota filter karne ke liye query parameter ke sath GET request bhejte hain
+    response = client.get("/api/cars?make=Toyota")
+    
+    # 3. Assertions (Kyunki filtering abhi implement nahi hui hai, ye test FAIL hoga)
+    assert response.status_code == 200
+    cars = response.json()
+    assert len(cars) == 1  # Sirf 1 car aani chahiye (Toyota)
+    assert cars[0]["make"] == "Toyota"

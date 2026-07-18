@@ -232,3 +232,17 @@ Created the GET endpoint mapped to /api/cars that queries all records from the C
 
 ## Final Decision
 Successfully exposed the inventory retrieval endpoint, transitioning the test suites to 8 passed and maintaining clean execution.
+# Prompt 13 - Filter Cars Inventory Test (RED)
+
+## Prompt
+Write a failing TDD test case test_filter_cars_by_make_success in test_cars.py to verify that filtering cars by make via query parameters works, expecting it to fail since filtering logic is not implemented yet.
+
+---
+
+## AI Response Summary
+Suggested adding a test case that inserts both a Toyota and a Honda, then queries GET /api/cars?make=Toyota, asserting that only the matching car is returned.
+
+---
+
+## Final Decision
+Added the test case and confirmed it fails with an AssertionError (2 == 1), successfully establishing the RED phase for the filtering feature.
