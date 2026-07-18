@@ -190,3 +190,17 @@ Defined the Car database model with required attributes, added CarCreate and Car
 
 ## Final Decision
 Implemented the full database and API logic for inventory creation, resulting in all 7 test suites passing successfully.
+# Prompt 10 - Pydantic V2 Config Refactor (GREEN)
+
+## Prompt
+Refactor schemas.py to resolve the PydanticDeprecatedSince20 warning by replacing the old class-based Config with the new ConfigDict syntax.
+
+---
+
+## AI Response Summary
+Recommended replacing class Config with model_config = ConfigDict(from_attributes=True) to align with modern Pydantic V2 standards.
+
+---
+
+## Final Decision
+Refactored the CarResponse schema, successfully eliminating the deprecation warning while keeping all 7 tests green.

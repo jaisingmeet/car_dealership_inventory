@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class UserRegister(BaseModel):
     username: str
@@ -24,5 +24,5 @@ class CarResponse(BaseModel):
     price: float
     status: str
 
-    class Config:
-        from_attributes = True
+    # Pydantic V2 standard syntax
+    model_config = ConfigDict(from_attributes=True)
