@@ -302,3 +302,17 @@ Suggested creating a test case that inserts a car, sends a DELETE request to its
 
 ## Final Decision
 Added the test case and verified it fails successfully in the RED phase due to the missing DELETE endpoint.
+# Prompt 18 - Delete Car Endpoint (GREEN)
+
+## Prompt
+Implement the DELETE /api/cars/{car_id} endpoint in main.py to locate the car record, delete it from the database, and handle 404 cases properly to pass the TDD cycle.
+
+---
+
+## AI Response Summary
+Created the DELETE route using SQLAlchemy's db.delete() function, included error handling for missing records, and verified all test validations.
+
+---
+
+## Final Decision
+Completed the core car inventory CRUD implementation with 11 successfully passing tests.

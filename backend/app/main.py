@@ -109,7 +109,6 @@ def update_car(car_id: int, car_update: CarCreate, db: Session = Depends(get_db)
             detail="Car not found"
         )
     
-    # Fields ko update kar rahe hain
     db_car.make = car_update.make
     db_car.model = car_update.model
     db_car.year = car_update.year
@@ -119,3 +118,17 @@ def update_car(car_id: int, car_update: CarCreate, db: Session = Depends(get_db)
     db.commit()
     db.refresh(db_car)
     return db_car
+
+@app.delete("/api/cars/{car_id}")
+def delete_car(car_id: int, db: Session = Depends(get_db)):
+    db_car = db.query(Car).filter(Car.id == car_id).first()
+    
+    if not db_car:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Car not found"
+        )
+    
+    db.delete(db_car)
+    db.commit()
+    return {"message": "Car deleted successfully"}
