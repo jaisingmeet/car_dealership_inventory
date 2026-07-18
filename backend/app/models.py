@@ -8,7 +8,7 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    is_admin = Column(Boolean, default=False)  # Admin authorization ke liye
+    is_admin = Column(Boolean, default=False)
 
 class Vehicle(Base):
     __tablename__ = "vehicles"
@@ -18,6 +18,6 @@ class Vehicle(Base):
     model = Column(String, index=True, nullable=False)
     year = Column(Integer, nullable=False)
     price = Column(Float, nullable=False)
-    status = Column(String, default="available")  # available, sold, etc.
-    category = Column(String, index=True, nullable=False)  # Sedan, SUV, etc.
-    quantity = Column(Integer, default=1)  # Stock management ke liye
+    status = Column(String, default="available")
+    category = Column(String, index=True, nullable=False)
+    quantity = Column(Integer, default=1)

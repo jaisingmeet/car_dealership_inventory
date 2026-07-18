@@ -1,318 +1,165 @@
+# AI Prompt History — Car Dealership Inventory System
+
+This file documents the AI-assisted development process for this project, in chronological order. AI tool used throughout: **Claude (Anthropic)**.
+
+---
+
 # Prompt 1 - Health Check Endpoint
 
 ## Prompt
-
-Create a minimal FastAPI health endpoint following Test-Driven Development (TDD).
-
-Requirements:
-
-- Endpoint: GET /api/health
-- Response:
-{
-    "status": "ok"
-}
-
-Write only the minimum implementation required for the current failing test.
-
----
+Reviewed my initial FastAPI project structure with a health check endpoint and a failing test written for it, following Red-Green TDD. Asked for feedback on whether the Red-Green cycle was done correctly.
 
 ## AI Response Summary
+Confirmed the Red-Green approach was correct in principle, but flagged that the failing test and its implementation had been combined into a single commit, when they should be split into two separate commits (a test-only commit for RED, and an implementation commit for GREEN) to keep the TDD history clear.
 
-- Created a FastAPI application.
-- Added GET /api/health endpoint.
-- Returned:
-{
-    "status":"ok"
-}
+## Final Decision
+Split the health check work into two commits: one for the failing test (RED) and one for the implementation (GREEN).
 
 ---
 
-## Final Decision
-
-Used the generated endpoint after manually reviewing and testing it with pytest.
-
-# Prompt 2 - Registration Test (RED)
+# Prompt 2 - Auth Module Planning
 
 ## Prompt
-
-Create a failing TDD test for user registration.
-
-Requirements:
-
-POST /api/auth/register
-
-Expected status code: 201
-
-Request Body:
-
-{
-  "username":"meet",
-  "email":"meet@example.com",
-  "password":"Password123"
-}
-
-Do not implement the endpoint.
-Only write the failing test.
-
----
+Asked what stack to use for the registration/login/JWT module, since I only know Python and wanted something beginner-friendly.
 
 ## AI Response Summary
+Recommended SQLite (file-based, no server setup) with SQLAlchemy as the ORM, passlib with bcrypt for password hashing, and python-jose for JWT handling.
 
-Generated a minimal failing pytest test for user registration.
+## Final Decision
+Adopted this stack: SQLite + SQLAlchemy + passlib(bcrypt) + python-jose.
 
 ---
 
-## Final Decision
-
-Used the generated test after verifying it follows the RED phase of TDD.
-
-# Prompt 3 - Registration Endpoint (GREEN)
+# Prompt 3 - Registration Test (RED)
 
 ## Prompt
-
-A failing registration test already exists.
-
-Implement only the minimum FastAPI endpoint required to satisfy the test.
-
-Do not add:
-
-- SQLite
-- JWT
-- Password hashing
-- Authentication
-- Extra validation
-
----
+Asked for a first failing test for `POST /api/auth/register`, before writing any implementation.
 
 ## AI Response Summary
+Provided a pytest test asserting a 201 response with the created user's email in the response, and confirmed it would fail since the endpoint didn't exist yet.
 
-Created:
-
-- UserRegister schema
-- POST /api/auth/register
-
-Returns
-
-{
-    "message":"User registered successfully"
-}
-
-HTTP Status:
-
-201 Created
+## Final Decision
+Added the test, ran pytest, confirmed RED (endpoint not found), then committed.
 
 ---
 
-## Final Decision
-
-Used the endpoint after running pytest successfully.
-# Prompt 4 - Database Refactor (GREEN)
+# Prompt 4 - Registration Endpoint with In-Memory Storage (GREEN, temporary)
 
 ## Prompt
-Refactor main.py to replace the temporary in-memory set with actual SQLite database persistence using SQLAlchemy, verifying functionality with existing tests.
-
----
+Asked for the minimum implementation to make the registration test pass.
 
 ## AI Response Summary
-Suggested moving database table creation (`Base.metadata.create_all`) and database session dependency (`get_db`) into main.py, updating the register route to query and insert using SQLAlchemy.
+Suggested a `UserRegister` Pydantic schema and a `/api/auth/register` endpoint using a simple in-memory `set()` to track registered emails, as the fastest way to reach GREEN.
+
+## Final Decision
+Implemented this as a temporary solution, understanding it would need to be replaced with real database persistence before the final submission (per Incubyte's "in-memory database is not sufficient" requirement).
 
 ---
 
-## Final Decision
-Implemented the database-driven registration logic, replacing the temporary in-memory set, and successfully verified all 5 tests passed via pytest.
-# Prompt 5 - User Login Test (RED)
+# Prompt 5 - Code Review: Duplicate Imports & Database Requirement
 
 ## Prompt
-Create a failing TDD test for user login endpoint POST /api/auth/login. Ensure the test database isolates state by resetting tables before the test session runs.
-
----
+Shared the current `main.py` (with duplicate `FastAPI`/`status` imports and the in-memory `registered_emails` set) for review before continuing.
 
 ## AI Response Summary
-Added database teardown/setup code at the top of test_auth.py to prevent state pollution, and added test_login_user_success to verify JWT token return on valid credentials.
+Pointed out the duplicate imports should be cleaned up, and flagged more importantly that the in-memory `set()` storage would not satisfy Incubyte's mandatory database requirement, and needed to be replaced with real SQLite persistence before the assignment is considered complete.
+
+## Final Decision
+Cleaned up the imports and planned the next step as a full database-backed refactor of the register endpoint.
 
 ---
 
-## Final Decision
-Applied the database reset lines and the new login test, confirming a clean RED phase failure (404 Not Found) for the login endpoint.
-# Prompt 6 - User Login Endpoint (GREEN)
+# Prompt 6 - Should Commit History Be Rewritten?
 
 ## Prompt
-Implement the minimum functionality for POST /api/auth/login in main.py using python-jose to sign and return a valid JWT token when valid credentials are provided.
-
----
+Asked whether the earlier in-memory-storage commits should be removed via interactive rebase to make the final git history look cleaner.
 
 ## AI Response Summary
-Created a UserLogin schema, defined standard JWT encoding keys, and added the /api/auth/login endpoint to validate plain-text passwords and issue token structures.
+Recommended against rewriting history. Incubyte's requirements explicitly ask for commits that "narrate your development journey" — keeping the in-memory-to-database progression visible is a legitimate, explainable engineering story, and rewriting history for a beginner using git carries unnecessary risk of losing work.
+
+## Final Decision
+Kept the existing commit history as-is; did not rebase.
 
 ---
 
-## Final Decision
-Implemented the login route exactly as described and verified that all 6 test suites passed cleanly.
-# Prompt 7 - Password Hashing Refactor (GREEN)
+# Prompt 7 - Database-Backed Registration (RED then GREEN)
 
 ## Prompt
-Refactor main.py to securely hash passwords using bcrypt before saving to the database, and update the login route to verify credentials using bcrypt.checkpw.
-
----
+Asked for a failing test proving registration persists a user to the database with a hashed (non-plaintext) password, then for the implementation to make it pass.
 
 ## AI Response Summary
-Recommended installing bcrypt, updating the registration route to salt and hash incoming plain-text passwords, and updating the login route to check bytes against the stored hash.
+Provided a test that queries `SessionLocal()` directly after registering, asserting the user exists and `hashed_password != <plaintext password>`. Then provided: `auth.py` with `hash_password`/`verify_password` using passlib+bcrypt, `crud.py` with `get_user_by_email`/`create_user`, a `get_db` dependency in `database.py`, and an updated `main.py` register endpoint using SQLAlchemy instead of the in-memory set.
+
+## Final Decision
+Implemented all of the above, removed `registered_emails = set()` entirely, and confirmed all tests passed against the real SQLite database.
 
 ---
 
-## Final Decision
-Implemented bcrypt securely, ensuring full backward compatibility with the existing 6 tests, keeping everything green.
-# Prompt 8 - Add Car Test (RED)
+# Prompt 8 - Removing Non-Business-Behavior Tests
 
 ## Prompt
-Create a new test file test_cars.py and write a failing TDD test for adding a new car to the inventory via POST /api/cars.
-
----
+Asked whether tests like `test_database_session_exists` and `test_user_model_exists` (which just check that a session/class can be instantiated) were valuable TDD tests.
 
 ## AI Response Summary
-Recommended isolating car inventory tests in a new file, resetting the database schema before execution, and sending a POST request to verify a 201 created status.
+Explained these are implementation tests, not business-behavior tests, and that Incubyte's requirement to see TDD "especially for backend logic" is better satisfied by tests that verify actual behavior (registration succeeds, duplicate email rejected, login returns a token, purchase reduces stock, etc.) rather than tests that just confirm a class or session object exists.
+
+## Final Decision
+Removed the implementation-only tests and focused subsequent tests on business behavior.
 
 ---
 
-## Final Decision
-Created test_cars.py and confirmed the test fails with a 404 status code as expected in the RED phase.
-# Prompt 9 - Add Car Endpoint (GREEN)
+# Prompt 9 - Login Endpoint with JWT (RED then GREEN)
 
 ## Prompt
-Implement the minimum functionality for POST /api/cars endpoint in main.py, adding the Car model to models.py and validation models to schemas.py to make the inventory test pass.
-
----
+Asked for a failing test for `POST /api/auth/login` returning a JWT access token, then the implementation.
 
 ## AI Response Summary
-Defined the Car database model with required attributes, added CarCreate and CarResponse Pydantic validation schemas, and exposed the POST /api/cars endpoint in main.py.
+Provided a test posting valid credentials and asserting `access_token` and `token_type: bearer` in the response. Then provided the login endpoint using `bcrypt.checkpw` to verify the password and `jose.jwt.encode` to issue a token with the username in the `sub` claim.
+
+## Final Decision
+Implemented login with JWT, confirmed the test passed, and flagged (from AI feedback) that the token should carry an expiry (`exp` claim) and the secret key should come from an environment variable rather than being hardcoded — both noted as follow-up improvements.
 
 ---
 
-## Final Decision
-Implemented the full database and API logic for inventory creation, resulting in all 7 test suites passing successfully.
-# Prompt 10 - Pydantic V2 Config Refactor (GREEN)
+# Prompt 10 - Vehicle Model & Protected CRUD Endpoints
 
 ## Prompt
-Refactor schemas.py to resolve the PydanticDeprecatedSince20 warning by replacing the old class-based Config with the new ConfigDict syntax.
-
----
+Asked for the `Vehicle` model (make, model, year, price, category, quantity, status) and the protected CRUD endpoints (`POST /api/vehicles`, `GET /api/vehicles`, `PUT /api/vehicles/{id}`, `DELETE /api/vehicles/{id}`), following the same RED-GREEN pattern used for auth.
 
 ## AI Response Summary
-Recommended replacing class Config with model_config = ConfigDict(from_attributes=True) to align with modern Pydantic V2 standards.
+Provided the `Vehicle` SQLAlchemy model, `VehicleCreate`/`VehicleResponse` Pydantic schemas, and the four endpoints in `main.py`, each requiring a valid JWT via a `get_current_user` dependency built on `HTTPBearer`.
+
+## Final Decision
+Implemented the model, schemas, and endpoints, with tests in `test_vehicles.py` covering add/list/update, each authenticating via a helper that registers and logs in a test user first.
 
 ---
 
-## Final Decision
-Refactored the CarResponse schema, successfully eliminating the deprecation warning while keeping all 7 tests green.
-# Prompt 11 - Get Cars Inventory Test (RED)
+# Prompt 11 - Role-Based Access Control (Admin-Only Delete/Restock)
 
 ## Prompt
-Write a failing TDD test case test_get_cars_success in test_cars.py to verify fetching all cars via GET /api/cars.
-
----
+Asked how to restrict vehicle deletion and restocking to admin users only.
 
 ## AI Response Summary
-Suggested adding a new test that seeds a car via POST and then attempts to retrieve the full inventory using a GET request, expecting a 404 failure.
+Suggested an `is_admin` boolean column on the `User` model and a `get_current_admin` dependency that builds on `get_current_user` and raises `403 Forbidden` if `is_admin` is false, applied to the `DELETE /api/vehicles/{id}` and `POST /api/vehicles/{id}/restock` routes.
+
+## Final Decision
+Implemented `get_current_admin` and applied it to both admin-only routes, with tests confirming a 403 response for non-admin users attempting these actions. Used a simplified "username contains 'admin'" rule to assign the `is_admin` flag during registration for testing purposes, understanding this is not a production-appropriate approach and would need a real admin-provisioning mechanism (e.g., a seed script or promotion by an existing admin) before real deployment.
 
 ---
 
-## Final Decision
-Updated test_cars.py and confirmed the test fails with a 404 status code as expected in the RED phase.
-# Prompt 12 - Get Cars Inventory Endpoint (GREEN)
+# Prompt 12 - Search, Purchase, and Restock Logic
 
 ## Prompt
-Implement the GET /api/cars endpoint in main.py to fetch all cars from the database and pass the corresponding test case.
-
----
+Asked for the search-by-filters endpoint and the purchase/restock inventory logic, including the out-of-stock edge case.
 
 ## AI Response Summary
-Created the GET endpoint mapped to /api/cars that queries all records from the Car table using SQLAlchemy and validated them against List[CarResponse].
-
----
+Provided `GET /api/vehicles/search` with optional `make`/`model`/`category`/`min_price`/`max_price` query parameters using SQLAlchemy's `ilike` for partial matching, plus `POST /api/vehicles/{id}/purchase` (decrements quantity, sets status to "out of stock" at zero, rejects purchase with a 400 if already at zero) and `POST /api/vehicles/{id}/restock` (admin-only, increments quantity, resets status to "available").
 
 ## Final Decision
-Successfully exposed the inventory retrieval endpoint, transitioning the test suites to 8 passed and maintaining clean execution.
-# Prompt 13 - Filter Cars Inventory Test (RED)
-
-## Prompt
-Write a failing TDD test case test_filter_cars_by_make_success in test_cars.py to verify that filtering cars by make via query parameters works, expecting it to fail since filtering logic is not implemented yet.
+Implemented all three, with corresponding tests including the out-of-stock rejection case and non-admin restock rejection case.
 
 ---
 
-## AI Response Summary
-Suggested adding a test case that inserts both a Toyota and a Honda, then queries GET /api/cars?make=Toyota, asserting that only the matching car is returned.
+# Reflection
 
----
-
-## Final Decision
-Added the test case and confirmed it fails with an AssertionError (2 == 1), successfully establishing the RED phase for the filtering feature.
-# Prompt 14 - Filter Cars Inventory Endpoint (GREEN)
-
-## Prompt
-Implement the filtering logic in the GET /api/cars endpoint within main.py to handle optional make and status query parameters, bringing the test suite back to green.
-
----
-
-## AI Response Summary
-Modified the get_cars endpoint to accept optional query parameters and dynamically apply SQLAlchemy filters to the database query.
-
----
-
-## Final Decision
-Successfully implemented inventory filtering, verifying that all 9 test cases now pass perfectly.
-# Prompt 15 - Update Car Details Test (RED)
-
-## Prompt
-Write a failing TDD test case test_update_car_success in test_cars.py to verify updating a car's details (like price and status) via PUT /api/cars/{id}.
-
----
-
-## AI Response Summary
-Suggested creating a test case that inserts a car, retrieves its generated ID, sends a PUT request with modified fields, and asserts successful modification.
-
----
-
-## Final Decision
-Added the test case and confirmed it fails as expected in the RED phase due to the missing PUT endpoint.
-# Prompt 16 - Update Car Details Endpoint (GREEN)
-
-## Prompt
-Implement the PUT /api/cars/{car_id} endpoint in main.py to fetch the existing car, update its fields based on the request body, and return the updated car object to pass the TDD cycle.
-
----
-
-## AI Response Summary
-Created the PUT endpoint with dynamic assignment of updated attributes, handled 404 edge cases, and successfully passed all test suite requirements.
-
----
-
-## Final Decision
-Implemented the car update feature, achieving a stable green state with 10 passing tests.
-# Prompt 17 - Delete Car Test (RED)
-
-## Prompt
-Write a failing TDD test case test_delete_car_success in test_cars.py to verify deleting a car record via DELETE /api/cars/{id} and ensuring the inventory is updated.
-
----
-
-## AI Response Summary
-Suggested creating a test case that inserts a car, sends a DELETE request to its ID, asserts a successful deletion message, and verifies the inventory is empty afterwards.
-
----
-
-## Final Decision
-Added the test case and verified it fails successfully in the RED phase due to the missing DELETE endpoint.
-# Prompt 18 - Delete Car Endpoint (GREEN)
-
-## Prompt
-Implement the DELETE /api/cars/{car_id} endpoint in main.py to locate the car record, delete it from the database, and handle 404 cases properly to pass the TDD cycle.
-
----
-
-## AI Response Summary
-Created the DELETE route using SQLAlchemy's db.delete() function, included error handling for missing records, and verified all test validations.
-
----
-
-## Final Decision
-Completed the core car inventory CRUD implementation with 11 successfully passing tests.
+Claude was used throughout as a collaborative pair programmer: generating boilerplate for each RED/GREEN step, reviewing my code for issues (duplicate imports, hardcoded secrets, missing token expiry, insecure admin-assignment logic), and explaining *why* certain approaches (like rewriting git history, or writing implementation-only tests) were not good practice. I made the final call on what to implement in every case, and manually verified each step by running the test suite before committing. The main way this changed my workflow was slowing down to write the failing test first, every time, rather than jumping straight to implementation.
