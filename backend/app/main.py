@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from jose import jwt
 import bcrypt
 from app.database import SessionLocal, engine, Base
-from app.models import User
-from app.schemas import UserRegister, UserLogin
+from app.models import User, Car
+from app.schemas import UserRegister, UserLogin, CarCreate, CarResponse
 
 Base.metadata.create_all(bind=engine)
 
@@ -33,7 +33,6 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
     
-    # Password ko secure tarike se hash karo
     password_bytes = user.password.encode('utf-8')
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
@@ -60,7 +59,6 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
             detail="Invalid credentials"
         )
     
-    # Hashed password ko plain-text password se verify karo
     user_password_bytes = credentials.password.encode('utf-8')
     db_password_bytes = db_user.hashed_password.encode('utf-8')
     
@@ -74,3 +72,17 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     access_token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
     
     return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/api/cars", response_model=CarResponse, status_code=status.HTTP_201_CREATED)
+def add_car(car: CarCreate, db: Session = Depends(get_db)):
+    new_car = Car(
+        make=car.make,
+        model=car.model,
+        year=car.year,
+        price=car.price,
+        status=car.status
+    )
+    db.add(new_car)
+    db.commit()
+    db.refresh(new_car)
+    return new_car
