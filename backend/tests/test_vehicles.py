@@ -117,4 +117,48 @@ def test_delete_vehicle_by_admin_success():
     response = client.delete(f"/api/vehicles/{vehicle_id}", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     assert response.json() == {"message": "Vehicle deleted successfully"}
+def test_search_vehicles_by_filters_success():
+    token = get_auth_token()
+    # Ek Sedan aur ek SUV add karte hain
+    client.post("/api/vehicles", json={
+        "make": "Honda", "model": "Civic", "year": 2023, "price": 25000.0,
+        "status": "available", "category": "Sedan", "quantity": 2
+    }, headers={"Authorization": f"Bearer {token}"})
+    
+    client.post("/api/vehicles", json={
+        "make": "Tata", "model": "Harrier", "year": 2024, "price": 35000.0,
+        "status": "available", "category": "SUV", "quantity": 1
+    }, headers={"Authorization": f"Bearer {token}"})
+
+    # SUV category se filter karke search check karte hain
+    response = client.get("/api/vehicles/search?category=SUV", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    assert response.json()[0]["model"] == "Harrier"
+
+def test_purchase_vehicle_reduces_quantity():
+    token = get_auth_token()
+    post_res = client.post("/api/vehicles", json={
+        "make": "Hyundai", "model": "Creta", "year": 2024, "price": 20000.0,
+        "status": "available", "category": "SUV", "quantity": 3
+    }, headers={"Authorization": f"Bearer {token}"})
+    v_id = post_res.json()["id"]
+
+    # Purchase endpoint hit karte hain
+    response = client.post(f"/api/vehicles/{v_id}/purchase", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    assert response.json()["remaining_quantity"] == 2  # 3 mein se 1 kam hona chahiye
+
+def test_restock_vehicle_by_admin_success():
+    admin_token = get_auth_token(username="adminmanager", email="adminmgr@example.com", is_admin=True)
+    post_res = client.post("/api/vehicles", json={
+        "make": "Maruti", "model": "Swift", "year": 2023, "price": 10000.0,
+        "status": "available", "category": "Hatchback", "quantity": 1
+    }, headers={"Authorization": f"Bearer {admin_token}"})
+    v_id = post_res.json()["id"]
+
+    # Admin restock karta hai 4 units
+    response = client.post(f"/api/vehicles/{v_id}/restock?amount=4", headers={"Authorization": f"Bearer {admin_token}"})
+    assert response.status_code == 200
+    assert response.json()["new_quantity"] == 5  # 1 + 4 = 5
     

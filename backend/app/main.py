@@ -174,7 +174,6 @@ def purchase_vehicle(id: int, db: Session = Depends(get_db), current_user: User 
     if db_vehicle.quantity == 0:
         db_vehicle.status = "out of stock"
         
-    db_vehicle.quantity -= 1
     db.commit()
     return {"message": "Purchase successful", "remaining_quantity": db_vehicle.quantity}
 
