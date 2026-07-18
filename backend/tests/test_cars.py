@@ -68,3 +68,31 @@ def test_filter_cars_by_make_success():
     cars = response.json()
     assert len(cars) == 1  # Sirf 1 car aani chahiye (Toyota)
     assert cars[0]["make"] == "Toyota"
+def test_update_car_success():
+    # 1. Pehle ek car add karte hain jise baad mein update karenge
+    initial_car = {
+        "make": "Hyundai",
+        "model": "i20",
+        "year": 2022,
+        "price": 12000.0,
+        "status": "available"
+    }
+    post_response = client.post("/api/cars", json=initial_car)
+    car_id = post_response.json()["id"]
+    
+    # 2. Updated data taiyar karte hain (status "sold" aur price badal di)
+    updated_data = {
+        "make": "Hyundai",
+        "model": "i20",
+        "year": 2022,
+        "price": 11500.0,
+        "status": "sold"
+    }
+    
+    # 3. PUT request bhejte hain specific car_id par
+    response = client.put(f"/api/cars/{car_id}", json=updated_data)
+    
+    # 4. Assertions (Kyunki endpoint abhi bana nahi hai, ye test 404/405 dekar FAIL hoga)
+    assert response.status_code == 200
+    assert response.json()["status"] == "sold"
+    assert response.json()["price"] == 11500.0

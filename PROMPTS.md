@@ -260,3 +260,17 @@ Modified the get_cars endpoint to accept optional query parameters and dynamical
 
 ## Final Decision
 Successfully implemented inventory filtering, verifying that all 9 test cases now pass perfectly.
+# Prompt 15 - Update Car Details Test (RED)
+
+## Prompt
+Write a failing TDD test case test_update_car_success in test_cars.py to verify updating a car's details (like price and status) via PUT /api/cars/{id}.
+
+---
+
+## AI Response Summary
+Suggested creating a test case that inserts a car, retrieves its generated ID, sends a PUT request with modified fields, and asserts successful modification.
+
+---
+
+## Final Decision
+Added the test case and confirmed it fails as expected in the RED phase due to the missing PUT endpoint.
