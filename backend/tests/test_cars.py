@@ -1,12 +1,16 @@
+import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 from app.database import Base, engine
 
-# Har test run se pehle table clean karne ke liye
-Base.metadata.drop_all(bind=engine)
-Base.metadata.create_all(bind=engine)
-
 client = TestClient(app)
+
+# Yeh fixture har ek test function se pehle database ko automatic saaf karega
+@pytest.fixture(autouse=True)
+def setup_database():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    yield
 
 def test_add_car_success():
     car_data = {
@@ -22,7 +26,7 @@ def test_add_car_success():
     assert "id" in response.json()
 
 def test_get_cars_success():
-    # Pehle ek car add kar dete hain taaki list mein data ho
+    # Ab har test ka apna fresh DB hoga, toh ye pehli hi car hogi
     car_data = {
         "make": "Honda",
         "model": "Civic",
@@ -32,11 +36,10 @@ def test_get_cars_success():
     }
     client.post("/api/cars", json=car_data)
     
-    # Ab saari cars fetch karne ke liye GET request bhejte hain
     response = client.get("/api/cars")
     
-    # Kyunki GET endpoint abhi bana nahi hai, ye 404 dega aur test FAIL hoga
     assert response.status_code == 200
     assert isinstance(response.json(), list)
-    assert len(response.json()) > 0
+    assert len(response.json()) == 1
     assert response.json()[0]["make"] == "Honda"
+    

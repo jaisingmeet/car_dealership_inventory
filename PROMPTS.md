@@ -218,3 +218,17 @@ Suggested adding a new test that seeds a car via POST and then attempts to retri
 
 ## Final Decision
 Updated test_cars.py and confirmed the test fails with a 404 status code as expected in the RED phase.
+# Prompt 12 - Get Cars Inventory Endpoint (GREEN)
+
+## Prompt
+Implement the GET /api/cars endpoint in main.py to fetch all cars from the database and pass the corresponding test case.
+
+---
+
+## AI Response Summary
+Created the GET endpoint mapped to /api/cars that queries all records from the Car table using SQLAlchemy and validated them against List[CarResponse].
+
+---
+
+## Final Decision
+Successfully exposed the inventory retrieval endpoint, transitioning the test suites to 8 passed and maintaining clean execution.
