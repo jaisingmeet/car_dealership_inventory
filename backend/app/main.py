@@ -1,16 +1,18 @@
-# backend/app/main.py
 from fastapi import FastAPI, HTTPException, status, Depends
 from sqlalchemy.orm import Session
+from jose import jwt
 from app.database import SessionLocal, engine, Base
 from app.models import User
-from app.schemas import UserRegister
+from app.schemas import UserRegister, UserLogin
 
-# Real database tables create karne ke liye (agar exist nahi karti toh)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Car Dealership API")
 
-# Database dependency (har request ke liye session open aur close karne ke liye)
+# JWT configurations
+SECRET_KEY = "supersecretkeyforcardealership"
+ALGORITHM = "HS256"
+
 def get_db():
     db = SessionLocal()
     try:
@@ -24,7 +26,6 @@ def health_check():
 
 @app.post("/api/auth/register", status_code=status.HTTP_201_CREATED)
 def register(user: UserRegister, db: Session = Depends(get_db)):
-    # 1. Check karo ki email database mein already hai ya nahi
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
         raise HTTPException(
@@ -32,16 +33,32 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
     
-    # 2. Naya user object banao (Abhi bina password hash ke, just functionality test karne ke liye)
     new_user = User(
         username=user.username,
         email=user.email,
-        hashed_password=user.password  # Abhi direct save kar rahe hain next step me hash karenge
+        hashed_password=user.password
     )
     
-    # 3. Database me save karo
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     
     return {"message": "User registered successfully"}
+
+@app.post("/api/auth/login")
+def login(credentials: UserLogin, db: Session = Depends(get_db)):
+    # Username se user ko database me search karo
+    db_user = db.query(User).filter(User.username == credentials.username).first()
+    
+    # Check karo user mila ya nahi aur password match hua ya nahi
+    if not db_user or db_user.hashed_password != credentials.password:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
+    
+    # JWT Access Token banao
+    token_data = {"sub": db_user.username}
+    access_token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
+    
+    return {"access_token": access_token, "token_type": "bearer"}
