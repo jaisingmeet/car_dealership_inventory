@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from jose import jwt
+import bcrypt
 from app.database import SessionLocal, engine, Base
 from app.models import User
 from app.schemas import UserRegister, UserLogin
@@ -9,7 +10,6 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Car Dealership API")
 
-# JWT configurations
 SECRET_KEY = "supersecretkeyforcardealership"
 ALGORITHM = "HS256"
 
@@ -33,10 +33,15 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
     
+    # Password ko secure tarike se hash karo
+    password_bytes = user.password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+    
     new_user = User(
         username=user.username,
         email=user.email,
-        hashed_password=user.password
+        hashed_password=hashed_password
     )
     
     db.add(new_user)
@@ -47,17 +52,24 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
 
 @app.post("/api/auth/login")
 def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    # Username se user ko database me search karo
     db_user = db.query(User).filter(User.username == credentials.username).first()
     
-    # Check karo user mila ya nahi aur password match hua ya nahi
-    if not db_user or db_user.hashed_password != credentials.password:
+    if not db_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
         )
     
-    # JWT Access Token banao
+    # Hashed password ko plain-text password se verify karo
+    user_password_bytes = credentials.password.encode('utf-8')
+    db_password_bytes = db_user.hashed_password.encode('utf-8')
+    
+    if not bcrypt.checkpw(user_password_bytes, db_password_bytes):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials"
+        )
+    
     token_data = {"sub": db_user.username}
     access_token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
     
