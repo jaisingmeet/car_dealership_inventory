@@ -204,3 +204,17 @@ Recommended replacing class Config with model_config = ConfigDict(from_attribute
 
 ## Final Decision
 Refactored the CarResponse schema, successfully eliminating the deprecation warning while keeping all 7 tests green.
+# Prompt 11 - Get Cars Inventory Test (RED)
+
+## Prompt
+Write a failing TDD test case test_get_cars_success in test_cars.py to verify fetching all cars via GET /api/cars.
+
+---
+
+## AI Response Summary
+Suggested adding a new test that seeds a car via POST and then attempts to retrieve the full inventory using a GET request, expecting a 404 failure.
+
+---
+
+## Final Decision
+Updated test_cars.py and confirmed the test fails with a 404 status code as expected in the RED phase.
