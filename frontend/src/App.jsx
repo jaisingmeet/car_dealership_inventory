@@ -1,122 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+
+// Main App Controller wrapper jo state listen karega
+const NavigationController = () => {
+  const { user, logout } = useAuth();
+  const [currentScreen, setCurrentScreen] = useState('dashboard'); // screens: dashboard, login, register
+
+  // Unauthenticated users sirf login ya register dekh sakte hain
+  if (!user) {
+    if (currentScreen === 'register') {
+      return <Register navigateToLogin={() => setCurrentScreen('login')} />;
+    }
+    return <Login navigateToRegister={() => setCurrentScreen('register')} />;
+  }
+
+  // Authenticated state: Show Dashboard layout
+  return (
+    <div className="min-h-screen bg-gray-950 text-gray-100 font-sans">
+      {/* Dynamic Navbar */}
+      <nav className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex justify-between items-center shadow-md">
+        <div className="flex items-center space-x-3">
+          <span className="text-2xl font-black tracking-wider text-blue-500">DRIVE<span className="text-white">X</span></span>
+          <span className="text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700">
+            {user.isAdmin ? '👑 Admin Panel' : '👤 Customer'}
+          </span>
+        </div>
+        <div className="flex items-center space-x-6">
+          <span className="text-sm text-gray-400">Welcome, <strong className="text-gray-200">{user.username}</strong></span>
+          <button 
+            onClick={logout} 
+            className="bg-red-900/40 hover:bg-red-600 text-red-200 hover:text-white text-xs font-semibold px-4 py-2 rounded-lg border border-red-800/60 transition-all duration-200"
+          >
+            Sign Out
+          </button>
+        </div>
+      </nav>
+
+      {/* Main Container View */}
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <Dashboard />
+      </main>
+    </div>
+  );
+};
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <AuthProvider>
+      <NavigationController />
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;
