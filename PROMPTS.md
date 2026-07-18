@@ -274,3 +274,17 @@ Suggested creating a test case that inserts a car, retrieves its generated ID, s
 
 ## Final Decision
 Added the test case and confirmed it fails as expected in the RED phase due to the missing PUT endpoint.
+# Prompt 16 - Update Car Details Endpoint (GREEN)
+
+## Prompt
+Implement the PUT /api/cars/{car_id} endpoint in main.py to fetch the existing car, update its fields based on the request body, and return the updated car object to pass the TDD cycle.
+
+---
+
+## AI Response Summary
+Created the PUT endpoint with dynamic assignment of updated attributes, handled 404 edge cases, and successfully passed all test suite requirements.
+
+---
+
+## Final Decision
+Implemented the car update feature, achieving a stable green state with 10 passing tests.

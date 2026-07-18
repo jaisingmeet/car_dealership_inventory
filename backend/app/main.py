@@ -11,7 +11,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Car Dealership API")
 
-SECRET_KEY = "supersecretkeyforcardealership"
+SECRET_KEY = "supersecretkeyforcardelarship"
 ALGORITHM = "HS256"
 
 def get_db():
@@ -98,3 +98,24 @@ def get_cars(make: Optional[str] = None, status: Optional[str] = None, db: Sessi
         query = query.filter(Car.status == status)
         
     return query.all()
+
+@app.put("/api/cars/{car_id}", response_model=CarResponse)
+def update_car(car_id: int, car_update: CarCreate, db: Session = Depends(get_db)):
+    db_car = db.query(Car).filter(Car.id == car_id).first()
+    
+    if not db_car:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Car not found"
+        )
+    
+    # Fields ko update kar rahe hain
+    db_car.make = car_update.make
+    db_car.model = car_update.model
+    db_car.year = car_update.year
+    db_car.price = car_update.price
+    db_car.status = car_update.status
+    
+    db.commit()
+    db.refresh(db_car)
+    return db_car
