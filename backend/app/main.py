@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from jose import jwt
 import bcrypt
-from typing import List
+from typing import List, Optional
 from app.database import SessionLocal, engine, Base
 from app.models import User, Car
 from app.schemas import UserRegister, UserLogin, CarCreate, CarResponse
@@ -89,6 +89,12 @@ def add_car(car: CarCreate, db: Session = Depends(get_db)):
     return new_car
 
 @app.get("/api/cars", response_model=List[CarResponse])
-def get_cars(db: Session = Depends(get_db)):
-    cars = db.query(Car).all()
-    return cars
+def get_cars(make: Optional[str] = None, status: Optional[str] = None, db: Session = Depends(get_db)):
+    query = db.query(Car)
+    
+    if make:
+        query = query.filter(Car.make == make)
+    if status:
+        query = query.filter(Car.status == status)
+        
+    return query.all()

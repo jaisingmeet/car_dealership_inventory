@@ -246,3 +246,17 @@ Suggested adding a test case that inserts both a Toyota and a Honda, then querie
 
 ## Final Decision
 Added the test case and confirmed it fails with an AssertionError (2 == 1), successfully establishing the RED phase for the filtering feature.
+# Prompt 14 - Filter Cars Inventory Endpoint (GREEN)
+
+## Prompt
+Implement the filtering logic in the GET /api/cars endpoint within main.py to handle optional make and status query parameters, bringing the test suite back to green.
+
+---
+
+## AI Response Summary
+Modified the get_cars endpoint to accept optional query parameters and dynamically apply SQLAlchemy filters to the database query.
+
+---
+
+## Final Decision
+Successfully implemented inventory filtering, verifying that all 9 test cases now pass perfectly.
