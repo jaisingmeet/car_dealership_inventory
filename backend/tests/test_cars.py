@@ -96,3 +96,25 @@ def test_update_car_success():
     assert response.status_code == 200
     assert response.json()["status"] == "sold"
     assert response.json()["price"] == 11500.0
+def test_delete_car_success():
+    # 1. Pehle ek car add karte hain jise delete karna hai
+    car_data = {
+        "make": "Ford",
+        "model": "Mustang",
+        "year": 2023,
+        "price": 55000.0,
+        "status": "available"
+    }
+    post_response = client.post("/api/cars", json=car_data)
+    car_id = post_response.json()["id"]
+    
+    # 2. DELETE request bhejte hain us specific car_id par
+    response = client.delete(f"/api/cars/{car_id}")
+    
+    # 3. Assertions (Kyunki endpoint abhi bana nahi hai, ye test FAIL hoga)
+    assert response.status_code == 200
+    assert response.json() == {"message": "Car deleted successfully"}
+    
+    # 4. Verify karne ke liye saari cars fetch karte hain, list khali honi chahiye
+    get_response = client.get("/api/cars")
+    assert len(get_response.json()) == 0

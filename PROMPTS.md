@@ -288,3 +288,17 @@ Created the PUT endpoint with dynamic assignment of updated attributes, handled 
 
 ## Final Decision
 Implemented the car update feature, achieving a stable green state with 10 passing tests.
+# Prompt 17 - Delete Car Test (RED)
+
+## Prompt
+Write a failing TDD test case test_delete_car_success in test_cars.py to verify deleting a car record via DELETE /api/cars/{id} and ensuring the inventory is updated.
+
+---
+
+## AI Response Summary
+Suggested creating a test case that inserts a car, sends a DELETE request to its ID, asserts a successful deletion message, and verifies the inventory is empty afterwards.
+
+---
+
+## Final Decision
+Added the test case and verified it fails successfully in the RED phase due to the missing DELETE endpoint.
