@@ -1,30 +1,178 @@
-# Prompt 1
+# Prompt 1 - Health Check Endpoint
 
-Create a minimal FastAPI health endpoint following TDD.
-The endpoint should be
-GET /api/health
-Return
+## Prompt
+
+Create a minimal FastAPI health endpoint following Test-Driven Development (TDD).
+
+Requirements:
+
+- Endpoint: GET /api/health
+- Response:
+{
+    "status": "ok"
+}
+
+Write only the minimum implementation required for the current failing test.
+
+---
+
+## AI Response Summary
+
+- Created a FastAPI application.
+- Added GET /api/health endpoint.
+- Returned:
 {
     "status":"ok"
 }
-Write only the minimum implementation required for the current failing test.
-# Prompt 2
 
-Create a failing TDD test for user registration in FastAPI.
+---
+
+## Final Decision
+
+Used the generated endpoint after manually reviewing and testing it with pytest.
+
+# Prompt 2 - Registration Test (RED)
+
+## Prompt
+
+Create a failing TDD test for user registration.
 
 Requirements:
 
 POST /api/auth/register
 
-Expected response code: 201
+Expected status code: 201
 
-The test should send:
+Request Body:
 
 {
-  "username": "meet",
-  "email": "meet@example.com",
-  "password": "Password123"
+  "username":"meet",
+  "email":"meet@example.com",
+  "password":"Password123"
 }
 
 Do not implement the endpoint.
 Only write the failing test.
+
+---
+
+## AI Response Summary
+
+Generated a minimal failing pytest test for user registration.
+
+---
+
+## Final Decision
+
+Used the generated test after verifying it follows the RED phase of TDD.
+
+# Prompt 3 - Registration Endpoint (GREEN)
+
+## Prompt
+
+A failing registration test already exists.
+
+Implement only the minimum FastAPI endpoint required to satisfy the test.
+
+Do not add:
+
+- SQLite
+- JWT
+- Password hashing
+- Authentication
+- Extra validation
+
+---
+
+## AI Response Summary
+
+Created:
+
+- UserRegister schema
+- POST /api/auth/register
+
+Returns
+
+{
+    "message":"User registered successfully"
+}
+
+HTTP Status:
+
+201 Created
+
+---
+
+## Final Decision
+
+Used the endpoint after running pytest successfully.
+# Prompt 4 - Database Refactor (GREEN)
+
+## Prompt
+Refactor main.py to replace the temporary in-memory set with actual SQLite database persistence using SQLAlchemy, verifying functionality with existing tests.
+
+---
+
+## AI Response Summary
+Suggested moving database table creation (`Base.metadata.create_all`) and database session dependency (`get_db`) into main.py, updating the register route to query and insert using SQLAlchemy.
+
+---
+
+## Final Decision
+Implemented the database-driven registration logic, replacing the temporary in-memory set, and successfully verified all 5 tests passed via pytest.
+# Prompt 5 - User Login Test (RED)
+
+## Prompt
+Create a failing TDD test for user login endpoint POST /api/auth/login. Ensure the test database isolates state by resetting tables before the test session runs.
+
+---
+
+## AI Response Summary
+Added database teardown/setup code at the top of test_auth.py to prevent state pollution, and added test_login_user_success to verify JWT token return on valid credentials.
+
+---
+
+## Final Decision
+Applied the database reset lines and the new login test, confirming a clean RED phase failure (404 Not Found) for the login endpoint.
+# Prompt 6 - User Login Endpoint (GREEN)
+
+## Prompt
+Implement the minimum functionality for POST /api/auth/login in main.py using python-jose to sign and return a valid JWT token when valid credentials are provided.
+
+---
+
+## AI Response Summary
+Created a UserLogin schema, defined standard JWT encoding keys, and added the /api/auth/login endpoint to validate plain-text passwords and issue token structures.
+
+---
+
+## Final Decision
+Implemented the login route exactly as described and verified that all 6 test suites passed cleanly.
+# Prompt 7 - Password Hashing Refactor (GREEN)
+
+## Prompt
+Refactor main.py to securely hash passwords using bcrypt before saving to the database, and update the login route to verify credentials using bcrypt.checkpw.
+
+---
+
+## AI Response Summary
+Recommended installing bcrypt, updating the registration route to salt and hash incoming plain-text passwords, and updating the login route to check bytes against the stored hash.
+
+---
+
+## Final Decision
+Implemented bcrypt securely, ensuring full backward compatibility with the existing 6 tests, keeping everything green.
+# Prompt 8 - Add Car Test (RED)
+
+## Prompt
+Create a new test file test_cars.py and write a failing TDD test for adding a new car to the inventory via POST /api/cars.
+
+---
+
+## AI Response Summary
+Recommended isolating car inventory tests in a new file, resetting the database schema before execution, and sending a POST request to verify a 201 created status.
+
+---
+
+## Final Decision
+Created test_cars.py and confirmed the test fails with a 404 status code as expected in the RED phase.
