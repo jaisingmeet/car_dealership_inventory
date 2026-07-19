@@ -73,7 +73,11 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
         "exp": datetime.now(timezone.utc) + timedelta(hours=24),
     }
     access_token = encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "is_admin": db_user.is_admin
+    }
 
 # --- VEHICLES ---
 
