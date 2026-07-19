@@ -14,6 +14,9 @@ export default function Dashboard() {
   const [maxPrice, setMaxPrice] = useState('');
   const [message, setMessage] = useState({ text: '', type: '' });
 
+  // Edit state — null means "add mode", an object means "edit mode"
+  const [editingVehicle, setEditingVehicle] = useState(null);
+
   // Admin form state
   const [newVehicle, setNewVehicle] = useState({
     make: '', model: '', year: new Date().getFullYear(),
@@ -108,6 +111,43 @@ export default function Dashboard() {
     }
   };
 
+  // Admin Operations: Edit — populate form with vehicle's current values
+  const handleEdit = (car) => {
+    setEditingVehicle(car);
+    setNewVehicle({
+      make: car.make,
+      model: car.model,
+      year: car.year,
+      price: car.price,
+      category: car.category,
+      quantity: car.quantity,
+      status: car.status,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Admin Operations: Save edits via PUT /api/vehicles/{id}
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    try {
+      await API.put(`/vehicles/${editingVehicle.id}`, newVehicle);
+      showMsg('Vehicle updated successfully!', 'success');
+      handleCancelEdit();
+      fetchVehicles();
+    } catch (err) {
+      showMsg(err.response?.data?.detail || 'Failed to update vehicle', 'error');
+    }
+  };
+
+  // Cancel edit mode — reset form and return to add mode
+  const handleCancelEdit = () => {
+    setEditingVehicle(null);
+    setNewVehicle({
+      make: '', model: '', year: new Date().getFullYear(),
+      price: '', category: '', quantity: 1, status: 'available'
+    });
+  };
+
   const showMsg = (text, type) => {
     setMessage({ text, type });
     setTimeout(() => setMessage({ text: '', type: '' }), 4000);
@@ -136,7 +176,12 @@ export default function Dashboard() {
           <h2 className="text-xl font-bold text-blue-400 mb-4 flex items-center gap-2">
             <span>👑</span> Fleet Manager (Admin Console)
           </h2>
-          <form onSubmit={handleAddVehicle} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <form onSubmit={editingVehicle ? handleSaveEdit : handleAddVehicle} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {editingVehicle && (
+              <div className="col-span-2 md:col-span-4 text-xs font-semibold text-yellow-400 bg-yellow-900/20 border border-yellow-800/40 rounded-lg px-3 py-2">
+                ✏️ Editing: {editingVehicle.make} {editingVehicle.model} (ID #{editingVehicle.id})
+              </div>
+            )}
             <input 
               type="text" placeholder="Make (e.g., Tesla)" required
               value={newVehicle.make} onChange={e => setNewVehicle({...newVehicle, make: e.target.value})}
@@ -167,9 +212,20 @@ export default function Dashboard() {
               value={newVehicle.quantity} onChange={e => setNewVehicle({...newVehicle, quantity: parseInt(e.target.value) || 0})}
               className="px-3 py-2 rounded-lg bg-gray-950 border border-gray-800 text-sm focus:outline-none focus:border-blue-500"
             />
-            <button type="submit" className="col-span-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm transition-colors py-2">
-              + Add Vehicle to Showroom
-            </button>
+            {editingVehicle ? (
+              <>
+                <button type="submit" className="col-span-1 bg-yellow-600 hover:bg-yellow-500 text-white font-bold rounded-lg text-sm transition-colors py-2">
+                  💾 Save Changes
+                </button>
+                <button type="button" onClick={handleCancelEdit} className="col-span-1 bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold rounded-lg text-sm transition-colors py-2">
+                  ✕ Cancel
+                </button>
+              </>
+            ) : (
+              <button type="submit" className="col-span-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm transition-colors py-2">
+                + Add Vehicle to Showroom
+              </button>
+            )}
           </form>
         </section>
       )}
@@ -255,7 +311,7 @@ export default function Dashboard() {
 
                   {/* Admin Controls Layout */}
                   {user?.isAdmin && (
-                    <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="grid grid-cols-3 gap-2 pt-1">
                       <button 
                         onClick={() => handleRestock(car.id)}
                         className="py-1.5 text-[11px] font-semibold bg-gray-800 hover:bg-gray-700 text-blue-400 rounded-lg border border-gray-700/60"
@@ -263,10 +319,16 @@ export default function Dashboard() {
                         + Restock (5)
                       </button>
                       <button 
+                        onClick={() => handleEdit(car)}
+                        className="py-1.5 text-[11px] font-semibold bg-yellow-900/20 hover:bg-yellow-600 text-yellow-400 hover:text-white rounded-lg border border-yellow-800/40 transition-colors"
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button 
                         onClick={() => handleDelete(car.id)}
                         className="py-1.5 text-[11px] font-semibold bg-red-900/20 hover:bg-red-600 text-red-400 hover:text-white rounded-lg border border-red-900/40"
                       >
-                        🗑️ Delete Fleet
+                        🗑️ Delete
                       </button>
                     </div>
                   )}
