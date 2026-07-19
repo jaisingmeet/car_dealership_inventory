@@ -163,3 +163,56 @@ Implemented all three, with corresponding tests including the out-of-stock rejec
 # Reflection
 
 Claude was used throughout as a collaborative pair programmer: generating boilerplate for each RED/GREEN step, reviewing my code for issues (duplicate imports, hardcoded secrets, missing token expiry, insecure admin-assignment logic), and explaining *why* certain approaches (like rewriting git history, or writing implementation-only tests) were not good practice. I made the final call on what to implement in every case, and manually verified each step by running the test suite before committing. The main way this changed my workflow was slowing down to write the failing test first, every time, rather than jumping straight to implementation.
+# Prompt 13 - Fixing CORS blocking frontend requests
+
+## Prompt
+Registration/login requests from the frontend were failing with "Failed to
+load response" in the browser Network tab. Asked for diagnosis and a fix.
+
+## AI Response Summary
+Diagnosed as a CORS issue — the FastAPI backend had no CORS middleware, so
+the browser was blocking all cross-origin requests from the Vite dev server.
+Server logs confirmed OPTIONS preflight requests returning 405. Added
+CORSMiddleware to main.py allowing the frontend's origin.
+
+## Final Decision
+Applied the fix, confirmed all 14 backend tests still passed, and confirmed
+registration/login worked from the browser afterward.
+
+# Prompt 14 - Fixing Tailwind CSS not applying any styles
+
+## Prompt
+The frontend was rendering as plain unstyled HTML despite using Tailwind
+utility classes throughout. Asked for diagnosis and a fix.
+
+## AI Response Summary
+Diagnosed a Tailwind v3/v4 mismatch: the project had tailwindcss@4.3.3
+installed, but index.css used v3's `@tailwind base/components/utilities`
+directives (unrecognized by v4) and vite.config.js was missing the
+`@tailwindcss/vite` plugin (v4 dropped the PostCSS-based integration).
+Installed the missing plugin, replaced the CSS directives with v4's
+`@import "tailwindcss";`, and added the plugin to vite.config.js.
+
+## Final Decision
+Applied all three fixes, restarted the dev server, and confirmed the full
+dark-themed styled UI rendered correctly afterward.
+# Prompt 15 - Adding Missing Edit Vehicle UI
+
+## Prompt
+Noticed the Incubyte spec requires admin UI to "add, update, and delete
+vehicles," but the dashboard only had add/delete/restock — no way to edit
+an existing vehicle from the UI, even though the backend PUT endpoint
+already existed and was tested. Asked to wire this up.
+
+## AI Response Summary
+Added an editingVehicle state to Dashboard.jsx, an Edit button on each
+vehicle card (admin only), and switched the existing add-vehicle form to
+double as an edit form when a vehicle is selected — populating its current
+values, changing the submit button to "Save Changes", and adding a Cancel
+button. On save, it calls the existing PUT /api/vehicles/{id} endpoint and
+refreshes the inventory list.
+
+## Final Decision
+Applied the change, confirmed Vite hot-reloaded without errors, and
+verified the Edit button appears for admin users and updates a vehicle's
+details correctly.
