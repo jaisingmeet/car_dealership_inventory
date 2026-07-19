@@ -12,13 +12,13 @@ export const AuthProvider = ({ children }) => {
     // Agar localstorage me already token aur user stored hain toh restore karo
     const savedToken = localStorage.getItem('token');
     const savedUsername = localStorage.getItem('username');
+    const savedIsAdmin = localStorage.getItem('isAdmin') === 'true';
     
     if (savedToken && savedUsername) {
       setToken(savedToken);
-      // Backend crud.py logic: agar username me 'admin' hai toh admin component privileges milenge
       setUser({
         username: savedUsername,
-        isAdmin: savedUsername.toLowerCase().includes('admin')
+        isAdmin: savedIsAdmin
       });
     }
     setLoading(false);
@@ -28,15 +28,16 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const response = await API.post('/auth/login', { username, password });
-      const { access_token } = response.data;
+      const { access_token, is_admin } = response.data;
 
       localStorage.setItem('token', access_token);
       localStorage.setItem('username', username);
+      localStorage.setItem('isAdmin', String(is_admin));
       
       setToken(access_token);
       const loggedInUser = {
         username: username,
-        isAdmin: username.toLowerCase().includes('admin')
+        isAdmin: is_admin
       };
       setUser(loggedInUser);
       return { success: true };
@@ -65,6 +66,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
+    localStorage.removeItem('isAdmin');
     setToken(null);
     setUser(null);
   };
